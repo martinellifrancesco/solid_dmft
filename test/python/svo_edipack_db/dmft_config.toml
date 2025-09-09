@@ -1,0 +1,39 @@
+[general]
+seedname = "inp"
+jobname = "out"
+enforce_off_diag = true
+block_threshold = 0.001
+
+prec_mu = 0.001
+
+h_int_type = "kanamori"
+U = 5.75
+J = 0.5
+
+mu_initial_guess = 12.297745
+
+beta = 4000
+
+n_iter_dmft = 8
+
+dc_type = 1
+dc = true
+dc_dmft = false
+
+calc_energies = false
+sigma_mix = 1.0
+
+h5_save_freq = 2
+
+[solver]
+type = "edipack"
+bath_sites = 3
+bath_hybrid = 0.3
+bath_type = "normal"
+fit_method = "minimize"
+fit_grad = "numeric"
+fit_weight = "1/w_n"
+bath_mixing = 0.1
+lanc_niter = 512
+lanc_dim_threshold = 1024
+

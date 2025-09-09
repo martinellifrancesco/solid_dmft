@@ -1,0 +1,39 @@
+#%Module1.0
+#
+# To be installed as ${MODULEPATH}/solid_dmft/3.3.2
+
+set     name        solid_dmft
+set     version     3.3.2
+set     root        /local/scratch/fmartinelli/working_dir/solid_dmft.src/install
+set     git_hash    
+
+set     url         "https://github.com/TRIQS/solid_dmft"
+set     description "An example application using cpp2py and triqs."
+
+module-whatis   "$description"
+
+proc ModulesHelp { } {
+    global description url version git_hash
+    puts stderr "Description: $description"
+    puts stderr "URL:         $url"
+    puts stderr "Version:     $version"
+    puts stderr "Git hash:    $git_hash"
+}
+
+# You may need to edit the next line if the triqs module
+# is installed under a different name in your setup.
+prereq triqs/3.3.1
+
+# Only one version of solid_dmft can be loaded at a time
+conflict $name
+
+setenv          solid_dmft_ROOT      $root
+setenv          solid_dmft_VERSION   $version
+setenv          solid_dmft_GIT_HASH  $git_hash
+
+prepend-path    PATH                $root/bin
+prepend-path    CPLUS_INCLUDE_PATH  $root/include
+prepend-path    LIBRARY_PATH        $root/lib
+prepend-path    LD_LIBRARY_PATH     $root/lib
+prepend-path    CMAKE_PREFIX_PATH   $root
+

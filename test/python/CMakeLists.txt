@@ -44,6 +44,10 @@ set (integration_tests
      svo_ctseg_crm
      lco_ftps
      nio_cthyb_hartree
+     svo_edipack_norm
+     svo_edipack_hybr
+     svo_edipack_repl
+     svo_edipack_db
      )
 
 # copy other test files

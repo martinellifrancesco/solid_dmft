@@ -1,4 +1,4 @@
-#!@TRIQS_PYTHON_EXECUTABLE@
+#!/home/fmartinelli/miniconda3/envs/triqs/bin/python3.13
 ################################################################################
 #
 # solid_dmft - A versatile python wrapper to perform DFT+DMFT calculations
