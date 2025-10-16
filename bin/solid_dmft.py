@@ -27,6 +27,9 @@ import sys
 import time
 # triqs
 import triqs.utility.mpi as mpi
+
+sys.path.insert(0,'/users/mfrances/software/solid_dmft/python/')
+
 import solid_dmft.main as run_solid_dmft
 
 # Needed for clean kill of mpi job

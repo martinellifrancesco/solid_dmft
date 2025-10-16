@@ -212,6 +212,7 @@ lanc_ngfiter = 200
 lanc_tolerance = 1e-18
 lanc_dim_threshold = 1024
 lanc_nstates_sector = 2
+lanc_nstates_total = 2
 
 [dft]
 dft_code = "<none>"
