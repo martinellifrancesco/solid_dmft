@@ -187,11 +187,11 @@ def _construct_kanamori(sum_k, general_params, solver_type_per_imp, icrsh, den_d
     """
 
     n_orb = common.get_n_orbitals(sum_k)[icrsh]['up']
-    if sum_k.SO == 1:
-        assert n_orb % 2 == 0
-        n_orb = n_orb // 2
-
-    if n_orb not in (2, 3):
+    # if sum_k.SO == 1:
+    #     assert n_orb % 2 == 0
+    #     n_orb = n_orb // 2
+    
+    if n_orb not in (2, 3) and sum_k.SO == 0:
         mpi.report('warning: are you sure you want to use the kanamori hamiltonian '
                    + 'outside the t2g or eg manifold?')
 
@@ -228,11 +228,11 @@ def _construct_kanamori(sum_k, general_params, solver_type_per_imp, icrsh, den_d
     else:
         h_int = _construct_kanamori_soc(general_params['U'][icrsh], general_params['J'][icrsh],
                                         n_orb, sum_k.sumk_to_solver[icrsh],
-                                        os.path.join(general_params['jobname'], f'H_imp{icrsh}.txt'))
+                                        os.path.join(general_params['jobname'], f'H_imp{icrsh}.txt'), den_den=den_den)
     return h_int
 
 
-def _construct_kanamori_soc(U_int, J_hund, n_orb, map_operator_structure, H_dump=None):
+def _construct_kanamori_soc(U_int, J_hund, n_orb, map_operator_structure, H_dump=None, den_den=False):
     r"""
     Adapted from triqs.operators.util.hamiltonians.h_int_kanamori. Assumes
     that spin_names == ['ud'] and that map_operator_structure is given.
@@ -273,6 +273,8 @@ def _construct_kanamori_soc(U_int, J_hund, n_orb, map_operator_structure, H_dump
             H_dump_file.write('%s' % (mkind(s, a2), ) + '\t')
             H_dump_file.write(str(U_val) + '\n')
 
+    if den_den:
+        return H
     # spin-flip terms:
     if H_dump:
         H_dump_file.write("Spin-flip terms:" + '\n')
@@ -618,3 +620,4 @@ def construct(sum_k, general_params, solver_type_per_imp,  gw_params=None):
         raise NotImplementedError('Error when constructing the interaction Hamiltonian.')
 
     return h_int, gw_params
+
