@@ -216,6 +216,7 @@ lanc_dim_threshold = 1024
 lanc_nstates_sector = 2
 lanc_nstates_total = 2
 zerotemp = false
+keep_dir = false
 
 [dft]
 dft_code = "<none>"

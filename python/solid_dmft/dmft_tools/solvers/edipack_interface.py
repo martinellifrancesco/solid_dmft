@@ -22,7 +22,16 @@ class EDIpackInterface(AbstractDMFTSolver):
     def __init__(self, general_params, solver_params, sum_k, icrsh, h_int, iteration_offset, deg_orbs_ftps, gw_params=None, advanced_params=None):
         # Call the base class constructor
         super().__init__(general_params, solver_params, sum_k, icrsh, h_int, iteration_offset, deg_orbs_ftps, gw_params, advanced_params)
-
+        
+        if mpi.is_master_node():
+            print('!!!DEBUG!!!')
+            gf_struct = self.sum_k.gf_struct_solver_list[self.icrsh]
+            ish = self.sum_k.inequiv_to_corr[self.icrsh]
+            print('Initializing EDIpack solver for shell ', self.icrsh)
+            print('GF structure for the solver: ', gf_struct)
+            print('Inequivalent index for the solver: ', ish)
+            print('!!!END DEBUG!!!')
+        
         # Solver parameters for the EDIpack solver
         self.triqs_solver_params_h, self.triqs_solver_params_fit, self.triqs_solver_params_lanczos, self.triqs_solver_params_solve, self.triqs_solver_params_general = {}, {}, {}, {}, {}
         
@@ -30,7 +39,7 @@ class EDIpackInterface(AbstractDMFTSolver):
         fit_params = ["cg_scheme", "cg_method", "cg_grad", "cg_ftol", "cg_stop", "cg_niter", "cg_weight", "cg_norm", "cg_pow", "cg_minimize_ver", "cg_minimize_hh", "lfit"]
         lanczos_params = ["lanc_method", "lanc_nstates_sector", "lanc_nstates_total", "lanc_nstates_step", "lanc_ncv_factor", "lanc_ncv_add", "lanc_niter", "lanc_ngfiter", "lanc_tolerance", "lanc_dim_threshold"]
         solve_params = ['beta', 'n_iw', 'n_w']
-        general_solver_params = ['ed_verbose', 'print_input_vars', 'cutoff', 'gs_threshold', 'ed_sparse_h', 'zerotemp']
+        general_solver_params = ['ed_verbose', 'print_input_vars', 'cutoff', 'gs_threshold', 'ed_sparse_h', 'zerotemp', 'keep_dir']
 
         # Parse the solver parameters and assign them to the appropriate dictionaries
         for key in self.solver_params.keys():
@@ -217,10 +226,11 @@ class EDIpackInterface(AbstractDMFTSolver):
         if mpi.is_master_node(): 
             ed_tmp_dir = [entry for entry in os.listdir('./') if entry.endswith('.tmp')][0]
             os.makedirs(self.general_params['jobname']+f'/solver_it{self.it}', exist_ok=True)
-            for item in os.listdir(ed_tmp_dir):
-                src_path = os.path.join(ed_tmp_dir, item)
-                dst_path = os.path.join(self.general_params['jobname']+f'/solver_it{self.it}', item)
-                shutil.copy2(src_path, dst_path)  
+            if 'keep_dir' in self.triqs_solver_params_solve.keys():
+                for item in os.listdir(ed_tmp_dir):
+                    src_path = os.path.join(ed_tmp_dir, item)
+                    dst_path = os.path.join(self.general_params['jobname']+f'/solver_it{self.it}', item)
+                    shutil.copy2(src_path, dst_path)  
             with open(self.general_params['jobname']+f'/solver_it{self.it}/solver_it{self.it}.pkl', 'wb') as file:
                 pickle.dump(self, file)
             
@@ -267,7 +277,8 @@ class EDIpackInterface(AbstractDMFTSolver):
         self.solver_eal = self.sum_k.block_structure.convert_matrix(self.sumk_eal, space_from='sumk', ish_from=self.sum_k.inequiv_to_corr[self.icrsh])
         
         if self.sum_k.SO == 1:
-            self.eps = self.solver_eal['ud'+f'_{self.icrsh}']
+            # self.eps = self.solver_eal['ud'+f'_{self.icrsh}']
+            self.eps = self.solver_eal['ud'+f'_0']
         else:
             self.eps = np.zeros((self.Norb*self.Nspin, self.Norb*self.Nspin), dtype='complex')
             for s, spin_block in self.solver_eal.items():
