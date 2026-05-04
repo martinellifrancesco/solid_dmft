@@ -158,7 +158,7 @@ class EDIpackInterface(AbstractDMFTSolver):
         # Make sure the Hamiltonian is explicitly hermitian to avoid numerical issues in the solver
         H = (H + dagger(H)) / 2
         fit_params = BathFittingParams(**self.triqs_solver_params_fit)
-        self.triqs_solver = EDIpackSolver(H, self.fops_imp_up, self.fops_imp_dn, self.fops_bath_up, self.fops_bath_dn, bath_fitting_params=fit_params, keep_dir=False, 
+        self.triqs_solver = EDIpackSolver(H, self.fops_imp_up, self.fops_imp_dn, self.fops_bath_up, self.fops_bath_dn, bath_fitting_params=fit_params, 
                                          lanczos_params=LanczosParams(**self.triqs_solver_params_lanczos), **self.triqs_solver_params_general)
         
         # Store git hash and version. TO-DO
