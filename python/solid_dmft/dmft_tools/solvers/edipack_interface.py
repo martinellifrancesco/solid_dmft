@@ -165,7 +165,7 @@ class EDIpackInterface(AbstractDMFTSolver):
         self.git_hash = triqs_hubbardI_hash  # edipack_hash
         self.version = version # version
 
-        self.it = 0
+        self.it = 0 + iteration_offset
 
         if mpi.is_master_node():    
             print(self.triqs_solver.h_params.Hloc)
