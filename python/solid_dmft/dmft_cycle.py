@@ -39,7 +39,8 @@ from triqs.version import version as triqs_version
 from h5 import HDFArchive
 import triqs.utility.mpi as mpi
 from triqs.operators import c_dag, c, Operator
-from triqs.gf import make_hermitian, fit_hermitian_tail, MeshReFreq, MeshImFreq, make_gf_from_fourier, iOmega_n
+from triqs.gf import (make_hermitian, fit_hermitian_tail, MeshReFreq, MeshImFreq, make_gf_from_fourier, iOmega_n,
+                       Gf, MeshDLRImFreq, make_gf_imfreq)
 from triqs.gf.tools import inverse, make_zero_tail
 from triqs_dft_tools.sumk_dft import SumkDFT
 
@@ -428,19 +429,46 @@ def dmft_cycle(general_params, solver_params, advanced_params, dft_params,
         sum_k, deg_orbs_ftps = _determine_block_structure(sum_k, general_params, advanced_params, solver_type_per_imp, dens_mat_dft)
     # if load sigma we need to load everything from this h5 archive
     elif general_params['load_sigma']:
-        #loading block_struc and rot_mat and deg_shells
+        #loading block_struc and rot_mat and deg_shells, and optionally transforming sigma to new beta
+        sigma_freq_new_list = []
+        sigma_iter_path = None
         if mpi.is_master_node():
-            with HDFArchive(general_params['path_to_sigma'], 'r') as old_calc:
+            sigma_path = '{}/{}.h5'.format(general_params['jobname'], general_params['seedname'])
+            with HDFArchive(sigma_path, 'r') as old_calc:
                 sum_k.block_structure = old_calc['DMFT_input/block_structure']
                 sum_k.deg_shells = old_calc['DMFT_input/deg_shells']
                 previous_rot_mat = old_calc['DMFT_input/rot_mat']
                 if deg_orbs_ftps is not None:
                     deg_orbs_ftps = old_calc['DMFT_input/solver_struct_ftps']
+                    
+                if general_params['beta'] != old_calc['DMFT_input/general_params']['beta']:
+                    # Transformation of sigma to DLR and interpolation to new beta
+                    sigma_iter_path = ('DMFT_results/last_iter' if general_params['load_sigma_iter'] == -1
+                                       else 'DMFT_results/it_{}'.format(general_params['load_sigma_iter']))
+                    mesh_dlr_iw = MeshDLRImFreq(general_params['beta'], 'Fermion',
+                                                general_params['dlr_wmax'], general_params['dlr_eps'])
+                    for icrsh in range(sum_k.n_inequiv_shells):
+                        sigma_freq_old = old_calc['{}/Sigma_freq_{}'.format(sigma_iter_path, icrsh)]
+                        sigma_dlr_iw = sum_k.block_structure.create_gf(
+                            ish=icrsh, gf_function=Gf, space='solver', mesh=mesh_dlr_iw)
+                        for block, gf in sigma_dlr_iw:
+                            for iwn in mesh_dlr_iw:
+                                gf[iwn] = sigma_freq_old[block](iwn)
+                        sigma_freq_new_list.append(make_gf_imfreq(sigma_dlr_iw, n_iw=general_params['n_iw']))
 
             if not all(np.allclose(x, y) for x, y in zip(sum_k.rot_mat, previous_rot_mat)):
                 print('WARNING: rot_mat in current run is different from loaded_sigma run.')
             else:
                 previous_rot_mat = None
+                
+        if sigma_freq_new_list:
+            with HDFArchive(sigma_path, 'a') as old_calc_write:
+                # Navigate path components (HDFArchive does not allow '/' in keys)
+                node = old_calc_write
+                for part in sigma_iter_path.split('/'):
+                    node = node[part]
+                for icrsh, sigma in enumerate(sigma_freq_new_list):
+                    node['Sigma_freq_{}'.format(icrsh)] = sigma
 
         sum_k.block_structure = mpi.bcast(sum_k.block_structure)
         sum_k.deg_shells = mpi.bcast(sum_k.deg_shells)
@@ -509,6 +537,12 @@ def dmft_cycle(general_params, solver_params, advanced_params, dft_params,
                 ar['DMFT_input']['shell_multiplicity'] = shell_multiplicity
                 if deg_orbs_ftps is not None:
                     ar['DMFT_input']['solver_struct_ftps'] = deg_orbs_ftps
+    elif general_params['load_sigma']:
+        # Overwrite parameters that may have changed when restarting with load_sigma
+        if mpi.is_master_node():
+            with HDFArchive(archive, 'a') as ar:
+                ar['DMFT_input']['general_params'] = dict_to_h5.prep_params_for_h5(general_params)
+                ar['DMFT_input']['solver_params'] = dict_to_h5.prep_params_for_h5(solver_params)
     mpi.barrier()
 
     solvers = [None] * sum_k.n_inequiv_shells

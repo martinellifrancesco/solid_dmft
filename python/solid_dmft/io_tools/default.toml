@@ -44,7 +44,6 @@ n_tau = 10001
 n_w = 5001
 noise_level_initial_sigma = 0.0
 occ_conv_crit = -1.0
-path_to_sigma = "<none>"
 prec_mu = 1e-4
 ratio_F4_F2 = "<none>"
 sampling_h5_save_freq = 5

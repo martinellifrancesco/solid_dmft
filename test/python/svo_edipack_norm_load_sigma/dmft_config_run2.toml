@@ -1,0 +1,38 @@
+[general]
+seedname = "inp"
+jobname = "out"
+
+block_threshold = 0.001
+mu_initial_guess = 0.006120
+
+n_iw = 100
+beta = 400
+n_w = 501
+w_range = [-10, 10]
+eta = 0.05
+enforce_off_diag = false
+
+prec_mu = 0.001
+
+h_int_type = "kanamori"
+U = 8.0
+J = 0.65
+
+calc_energies = true
+
+n_iter_dmft = 1
+
+dc_type = 1
+dc = true
+dc_dmft = false
+
+load_sigma = true
+load_sigma_iter = -1
+dlr_wmax = 10.0
+dlr_eps = 1e-6
+
+[solver]
+type = "hubbardI"
+measure_G_l = false
+measure_G_tau = true
+measure_density_matrix = false

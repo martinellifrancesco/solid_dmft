@@ -160,9 +160,6 @@ noise_level_initial_sigma : float, default = 0.0
         spread of Gaussian noise applied to the initial Sigma
 occ_conv_crit : float, default = -1.0
         stop the calculation if a certain threshold for the imp occ change is reached
-path_to_sigma : str, default = None
-        path to h5 file from which the sigma should be loaded.
-        Needed if load_sigma is true
 prec_mu : float, default = 1e-4
         general precision for determining the chemical potential at any time calc_mu is called
 ratio_F4_F2 : float or list of float, default = None

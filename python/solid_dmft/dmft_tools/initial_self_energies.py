@@ -486,18 +486,12 @@ def determine_dc_and_initial_sigma(general_params, gw_params, advanced_params, s
     last_g0 = None
     density_mat_dft = [G_loc_all[iineq].density() for iineq in range(sum_k.n_inequiv_shells)]
     if mpi.is_master_node():
-        # Resumes previous calculation
-        if iteration_offset > 0:
-            print('\nFrom previous calculation:', end=' ')
-            start_sigma, sum_k.dc_imp, sum_k.dc_energ, last_g0,  _ = _load_sigma_from_h5(archive, -1)
-            if general_params['csc'] and not general_params['dc_dmft']:
-                sum_k = calculate_double_counting(sum_k, density_mat_dft, general_params, gw_params,
-                                                  advanced_params, solver_type_per_imp, G_loc_all)
-        # Loads Sigma from different calculation
-        elif general_params['load_sigma']:
-            print('\nFrom {}:'.format(general_params['path_to_sigma']), end=' ')
+        # Loads Sigma from previous iteration with different parameters (takes priority over iteration_offset)
+        if general_params['load_sigma']:
+            sigma_path = '{}/{}.h5'.format(general_params['jobname'], general_params['seedname'])
+            print('\nFrom {}:'.format(sigma_path), end=' ')
             (loaded_sigma, loaded_dc_imp, _,
-             _, loaded_density_matrix) = _load_sigma_from_h5(general_params['path_to_sigma'], general_params['load_sigma_iter'])
+             _, loaded_density_matrix) = _load_sigma_from_h5(sigma_path, general_params['load_sigma_iter'])
 
             # Recalculate double counting in case U, J or DC formula changed
             if general_params['dc']:
@@ -509,6 +503,14 @@ def determine_dc_and_initial_sigma(general_params, gw_params, advanced_params, s
                                                       advanced_params, solver_type_per_imp, G_loc_all)
 
             start_sigma = _set_loaded_sigma(sum_k, loaded_sigma, loaded_dc_imp, general_params)
+
+        # Resumes previous calculation
+        elif iteration_offset > 0:
+            print('\nFrom previous calculation:', end=' ')
+            start_sigma, sum_k.dc_imp, sum_k.dc_energ, last_g0,  _ = _load_sigma_from_h5(archive, -1)
+            if general_params['csc'] and not general_params['dc_dmft']:
+                sum_k = calculate_double_counting(sum_k, density_mat_dft, general_params, gw_params,
+                                                  advanced_params, solver_type_per_imp, G_loc_all)
 
         # Sets DC as Sigma because no initial Sigma given
         elif general_params['dc']:
